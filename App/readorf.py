@@ -616,13 +616,13 @@ class ReadORF:
         return (ORF_coords) #ORF_coords_sorted (for the real transposed co_ords) / ORF_coords (for my non transposed co_ords)
 
     def ntd_recall(self, resfile, orf_dict):
-        '''
-
-        :param orfile:
-        :param resfile:
-        :param orf_dict:
-        :return:
-        '''
+        """
+        Searches the raw fasta/fastq sequence file to return an ORF's source nucleotide sequence.
+        :param orfile: Raw fasta/fastq sequence file: <self.file>
+        :param resfile: Out file to store results in
+        :param orf_dict: Dictionary containing orf protein list from <ORF1/2/3>
+        :return: NONE
+        """
         with self.openwith(self.file, 'r') as filein, open(resfile, 'w') as fileout:
             header=filein.readline()
 
@@ -677,7 +677,13 @@ class ReadORF:
         return
 
     def mntd_recall(self, resfile, orf_dict):
-
+        """
+        Searches the raw fasta/fastq sequence file to return an ORF's source nucleotide sequence.
+        :param orfile: Raw fasta/fastq sequence file: <self.file>
+        :param resfile: Out file to store results in
+        :param orf_dict: Dictionary containing orf protein list from <ORF1/2/3>
+        :return: NONE
+        """
         with self.openwith(self.file, 'r') as filein, open(resfile, 'w') as fileout:
             header=filein.readline()
 
@@ -734,5 +740,4 @@ class ReadORF:
         del(orf_dict) #save mem space
 
         return
-
 
