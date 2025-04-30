@@ -1,13 +1,16 @@
-#Read ORF
+#ReadORF
 import gzip
 
 class ReadORF:
-
+    '''
+    ReadORF: class object that handles whole genome sequenced files (eg fasta/fastq) to extract ORF information
+    !!! DOES NOT WORK IF YOUR FILE CONTAINS MULTIPLE SEQUENCES, ONLY SUPPORTS ONE LARGE GENOME SEQUENCE !!!
+    '''
     #works seamlessly with large files, because it calculates ORF's one by one and so u have to orfsearch for each orf file
 
     #initializer for our object
     def __init__(self, file):
-        print('FindORF has been called')
+        #print('ReadORF has been called')
         #INSTANCE ATTRIBUTES:
         self.file=file
         self.count=0
@@ -125,6 +128,8 @@ class ReadORF:
             self.writemode='w'
 
     def subset(self, out, max):
+        #used for TESTING
+        #should probably make this static method where I can choose any file to subset?
 
         with self.openwith(self.file, 'r') as fastq:
             with open(out, self.writemode) as out:
@@ -137,6 +142,7 @@ class ReadORF:
         self.count=0 #reset self.count to 0 so if called into another class method, it behaves correctly
 
     def preview(self, file, number):
+        #used for TESTING
         #returns a print of each line upto <number> lines
         with self.openwith(file, 'r') as filein:
             self.count=0
@@ -149,15 +155,27 @@ class ReadORF:
 
         return
 
+    def header(self):
+        #returns header of sequencing file
+        with self.openwith(self.file, 'r') as filein:
+            header=filein.readline()
+
+        return header
+
     def complement(self, sequence):
-        #could make this static if i remove complementtable from __init__
+        '''
+        Returns the complement sequence of sequence inserted.
+        :param sequence:  DNA Nucleotide sequence (str)
+        :return: Complemented sequence (str)
+        '''
+        #could make this static method if i remove complementtable from __init__
         seq=[]
 
         for base in sequence: #Iterate over all nucleotide bases in the sequence
             if base in self.complementtable: #Find the base in complement table
                 seq.append(self.complementtable[base]) #append its complement into seq
             else:
-                seq.append(base) #if there is N (for low quality base calls), append it instead of deleting
+                seq.append(base) #if there is N, append it instead of deleting
 
         return (''.join(seq)) #return one string of the complement strand
 
@@ -172,19 +190,18 @@ class ReadORF:
         '''
         with self.openwith(self.file, 'r') as filein, open(out, self.writemode) as fileout:
 
-            #Read and write header
             header=filein.readline()
             fileout.write(header)
             codonseq=[]
 
             for lines in filein:
                 lines=lines.rstrip() #remove trailing artefacts and whitespace
-                aa_seq=[]
+                aa_seq=[] #Stores the aa_sequence of each new sequence line
 
                 for base in lines:
                     codonseq.append(base) #add a base ntd to codonseq
 
-                    if len(codonseq)==3: #translate codon if its full (3 letters long)
+                    if len(codonseq)==3: #translate codon if its full
                         codonjoin="".join(codonseq) #join up codonseq list into a single string
                         codonseq=[] #empty codonseq to prepare for new codon
 
@@ -209,7 +226,6 @@ class ReadORF:
         '''
         with self.openwith(self.file, 'r') as filein, open(out, self.writemode) as fileout:
 
-            #Read and write header
             header=filein.readline()
             fileout.write(header)
             codonseq=[]
@@ -217,14 +233,14 @@ class ReadORF:
 
             for lines in filein:
                 lines=lines.rstrip() #remove trailing artefacts and whitespace
-                aa_seq=[]
+                aa_seq=[] #Stores the aa_sequence of each new sequence line
 
                 linecount+=1 #Using line counts to frame shift for reading
                 if linecount==1:
                     lines=lines[1:]
 
                 for base in lines:
-                    codonseq.append(base)
+                    codonseq.append(base) #add a base ntd to codonseq
 
                     if len(codonseq)==3: #translate codon if its full
                         codonjoin="".join(codonseq)  #join up codonseq list into a single string
@@ -251,7 +267,6 @@ class ReadORF:
         '''
         with self.openwith(self.file, 'r') as filein, open(out, self.writemode) as fileout:
 
-            #Read and write header
             header=filein.readline()
             fileout.write(header)
             codonseq=[]
@@ -259,14 +274,14 @@ class ReadORF:
 
             for lines in filein:
                 lines=lines.rstrip() #remove trailing artefacts and whitespace
-                aa_seq=[]
+                aa_seq=[] #Stores the aa_sequence of each new sequence line
 
                 linecount+=1 #Using line counts to frame shift for reading
                 if linecount==1:
                     lines=lines[2:]
 
                 for base in lines:
-                    codonseq.append(base)
+                    codonseq.append(base) #add a base ntd to codonseq
 
                     if len(codonseq)==3: #translate codon if its full
                         codonjoin="".join(codonseq)  #join up codonseq list into a single string
@@ -296,7 +311,6 @@ class ReadORF:
         '''
         with self.openwith(self.file, 'r') as filein, open(out, self.writemode) as fileout:
 
-                #Read and write header
                 header=filein.readline()
                 fileout.write(header)
                 codonseq=[]
@@ -304,10 +318,10 @@ class ReadORF:
                 for lines in filein:
                     lines=lines.rstrip() #remove trailing artefacts and whitespace
                     lines=self.complement(lines) #complement the sequence
-                    aa_seq=[]
+                    aa_seq=[] #Stores the aa_sequence of each new lines
 
                     for base in lines:
-                        codonseq.append(base)
+                        codonseq.append(base) #add a base ntd to codonseq
 
                         if len(codonseq)==3: #translate codon if its full
                             codonjoin=(''.join(codonseq)) #join up codonseq list into a single string
@@ -315,12 +329,14 @@ class ReadORF:
                             codonseq=[] #empty codonseq to prepare for a new codon
 
                             try:
-                                aa_seq.append(self.codon_aa_table[codonjoin])  #direct call in dictionary for amino acid of codon
+                                aa_seq.append(
+                                    self.codon_aa_table[codonjoin])  #direct call in dictionary for amino acid of codon
                             except:
-                                aa_seq.append('-')  #If the codon sequence has any other letters apart from actg (due to sequencing error or low quality/confidence base call) it will replace it with a '-'
-                                #OR if codon sequence can not be found in codon_aa_table['XYZ'] then it appends '-'
+                                aa_seq.append(
+                                    '-')  #If the codon sequence has any other letters apart from actg (due to sequencing error or low quality/confidence base call) it will replace it with a '-'
+                                # OR if codon sequence can not be found in codon_aa_table['XYZ'] then it appends '-'
 
-                    fileout.write(''.join(aa_seq) + '\n')  #new line for neater formating
+                    fileout.write(''.join(aa_seq)+'\n')  #new line for neater formating
 
         return
 
@@ -338,20 +354,20 @@ class ReadORF:
         '''
         with self.openwith(self.file, 'r') as filein, open(out, self.writemode) as fileout:
 
-                #Read and write header
                 header=filein.readline()
                 fileout.write(header)
                 codonseq=[]
                 linecount = 0  # Linecount to prepare first sequence line for frame shift reading
 
                 for lines in filein:
-                    lines=lines.rstrip() #remove trailing artefacts and whitespace
+                    lines=lines.rstrip()
                     lines=self.complement(lines) #complement the sequence
-                    aa_seq=[]
+                    aa_seq=[] #Stores the aa_sequence of each new lines
 
-                    linecount+=1  #Using line counts to frame shift for reading
-                    if linecount==1:
-                        lines=lines[1:]
+                    linecount += 1  # Using line counts to frame shift for reading
+                    if linecount == 1:
+                        lines = lines[1:]
+
 
                     for base in lines:
                         codonseq.append(base)
@@ -362,13 +378,15 @@ class ReadORF:
                             codonseq=[] #empty codonseq to prepare for a new codon
 
                             try:
-                                aa_seq.append(self.codon_aa_table[codonjoin])  #direct call in dictionary for amino acid of codon
+                                aa_seq.append(
+                                    self.codon_aa_table[codonjoin])  #direct call in dictionary for amino acid of codon
                             except:
-                                aa_seq.append('-')  #If the codon sequence has any other letters apart from actg (due to sequencing error or low quality/confidence base call) it will replace it with a '-'
-                                #OR if codon sequence can not be found in codon_aa_table['XYZ'] then it appends '-'
+                                aa_seq.append(
+                                    '-')  #If the codon sequence has any other letters apart from actg (due to sequencing error or low quality/confidence base call) it will replace it with a '-'
+                                # OR if codon sequence can not be found in codon_aa_table['XYZ'] then it appends '-'
 
 
-                    fileout.write(''.join(aa_seq) + '\n')  #new line for neater formating
+                    fileout.write(''.join(aa_seq)+'\n')  #new line for neater formating
 
         return
 
@@ -385,7 +403,7 @@ class ReadORF:
         :return:
         '''
         with self.openwith(self.file, 'r') as filein, open(out, self.writemode) as fileout:
-            #Read and write header
+
             header=filein.readline()
             fileout.write(header)
             codonseq=[]
@@ -393,15 +411,15 @@ class ReadORF:
 
             for lines in filein:
                 lines=lines.rstrip()  #remove trailing artefacts and whitespace
-                lines=self.complement(lines)  # omplement the sequence
-                aa_seq=[]
+                lines = self.complement(lines)  # complement the sequence
+                aa_seq=[]  #Stores the aa_sequence of each new lines
 
                 linecount+=1  #Using line counts to frame shift for reading
                 if linecount==1:
                     lines=lines[2:]
 
                 for base in lines:
-                    codonseq.append(base)
+                    codonseq.append(base)  #add a base ntd to codonseq
 
                     if len(codonseq)==3:  #translate codon if its full
                         codonjoin=(''.join(codonseq))  #join up codonseq list into a single string
@@ -409,15 +427,19 @@ class ReadORF:
                         codonseq=[]  #empty codonseq to prepare for a new codon
 
                         try:
-                            aa_seq.append(self.codon_aa_table[codonjoin])  #direct call in dictionary for amino acid of codon
+                            aa_seq.append(
+                                self.codon_aa_table[codonjoin])  #direct call in dictionary for amino acid of codon
                         except:
-                            aa_seq.append('-')  #If the codon sequence has any other letters apart from actg (due to sequencing error or low quality/confidence base call) it will replace it with a '-'
-                            #OR if codon sequence can not be found in codon_aa_table['XYZ'] then it appends '-'
+                            aa_seq.append(
+                                '-')  #If the codon sequence has any other letters apart from actg (due to sequencing error or low quality/confidence base call) it will replace it with a '-'
+                            # OR if codon sequence can not be found in codon_aa_table['XYZ'] then it appends '-'
 
                 fileout.write(''.join(aa_seq)+'\n')  #new line for neater formating
 
         return
 
+#####MAKE A MAIN FUNCTION WHICH RUNS ALL ORF FUNCTIONS?
+# IF __NAME__==__MAIN__: BLOCK TO RUN ALL THE CODE WHEN LOADING THE SCRIPT TYPE SHI
     def ORFSearch(self, ORFile, RESfile):
         '''
 
@@ -434,7 +456,6 @@ class ReadORF:
         with self.openwith(ORFile, 'r') as filein, open(RESfile, self.writemode) as fileout:
 
             header=filein.readline()
-            fileout.write(header)
             #intialize some variables:
             maybe_orf=0
             ORFcount=0
@@ -444,10 +465,10 @@ class ReadORF:
             'orf protein x': ['start index', 'orf protein length'],
             }
 
-            for sequence in filein:
+            for sequence in filein: #iterate over sequence lines in our translated ORF files
                 sequence=sequence.rstrip() #remove trailing artefacts ('\n' and whitespaces
 
-                for aa in sequence:
+                for aa in sequence: #iterate over each aminno acid in sequence
                     ORF_coords['co-ords']+=1 # #adding count of each aa
 
                     if aa=='M' and maybe_orf==0: #simple and gate to start initalizing orf sequence
@@ -470,11 +491,10 @@ class ReadORF:
                         orf_id=[orfcoord-1, len(ORFjoin)] #saves the co-ordinates for this specific ORF protein X and the length of its orf protein sequence
                         #^ this kinda makes the dictionary redudant for storing ORF protein X information, so I might delete adding co-ords into the dict, but counting ['co-ords'] for total seq length is nice
 
-                        fileout.write(orfname+' @'+str(orf_id)+' >['+str(orf_id[0]*3)+', '+str(orf_id[1]*3)+'] \n') #write ORF number as mini header
+                        fileout.write('>'+orfname+'\n')#' @'+str(orf_id)+' >['+str(orf_id[0]*3)+', '+str(orf_id[1]*3)+'] \n') #write ORF number as mini header
                         fileout.write(ORFjoin+'\n') #write our aa joined ORF sequence
 
-
-            #print(ORF_coords.items())
+            #print(ORF_coords.items()) #TESTS
 
         return (ORF_coords)
 
@@ -508,7 +528,6 @@ class ReadORF:
         with self.openwith(ORFile, 'r') as filein, open(RESfile, self.writemode) as fileout:
 
             header=filein.readline()
-            fileout.write(header)
             #intialize some variables:
             maybe_orf=0
             ORFcount=0
@@ -542,7 +561,7 @@ class ReadORF:
                             mloc=ORFjoin.find('M')
                             ORFjoin=ORFjoin[mloc:]
                             orfname='ORF Protein '+str(ORFcount)
-                            fileout.write(orfname+'\n')
+                            fileout.write('>'+orfname+'\n')
                             fileout.write(ORFjoin+'\n')
 
                             ORF_coords[orfname]=[(ORF_coords['co-ords']-mloc+1), len(ORFjoin)] #-mloc because co-ords right now is at stop codon, mloc finds the index of m within the sequence,
@@ -565,7 +584,7 @@ class ReadORF:
                 mloc = ORFjoin.find('M')
                 ORFjoin = ORFjoin[mloc:]  # cut string from M index
                 orfname='ORF Protein '+str(ORFcount+1)
-                fileout.write(orfname+'\n')  # write ORF number as mini header
+                fileout.write('>'+orfname+'\n')  # write ORF number as mini header
                 fileout.write(ORFjoin+'\n')  # write our aa joined ORF sequence
 
                 ORF_coords[orfname] = [(ORF_coords['co-ords']-mloc), len(ORFjoin)] #adding last orf protein to our orf_coords dict, #dont have to do +1 here because M codon is already included
@@ -596,20 +615,16 @@ class ReadORF:
 
         return (ORF_coords) #ORF_coords_sorted (for the real transposed co_ords) / ORF_coords (for my non transposed co_ords)
 
-    # IN THE REAL THING, ORFFILE SHOULD BE SELF.FILE, IM JUST USING ORFILE FOR TESTING PURPOSES ON GENE.TXT
-#TODO: SWITCH ORFFILE FOR SELF.FILE FOR THE MAIN THING
-    #IM JUST USING ORFILE RIGHT NOW FOR TESTING PURPOSES
-    def ntd_recall(self, orfile, resfile, orf_dict):
-        """
-        Searches the raw fasta/fastq sequence file to return an ORF's source nucleotide sequence.
-        :param orfile: Raw fasta/fastq sequence file: <self.file> #TODO: Go over this method and replace orfifle with <self.file> after testing before real deployment
-        :param resfile: Out file to store results in
-        :param orf_dict: Dictionary containing orf protein list from <ORF1/2/3>
-        :return: NONE
-        """
-        with open(orfile, 'r') as filein, open(resfile, 'w') as fileout:
+    def ntd_recall(self, resfile, orf_dict):
+        '''
+
+        :param orfile:
+        :param resfile:
+        :param orf_dict:
+        :return:
+        '''
+        with self.openwith(self.file, 'r') as filein, open(resfile, 'w') as fileout:
             header=filein.readline()
-            fileout.write(header)
 
             counter=0
             orf_prot=1
@@ -641,7 +656,7 @@ class ReadORF:
                         append=0
 
                         #write to file:
-                        fileout.write('ORF Sequence '+str(orf_prot)+'\n')
+                        fileout.write('>ORF Sequence '+str(orf_prot)+'\n')
                         ntd_seqjoin=''.join(ntd_seq)
                         fileout.write(ntd_seqjoin+'\n')
 
@@ -661,17 +676,10 @@ class ReadORF:
 
         return
 
-    def mntd_recall(self, orfile, resfile, orf_dict):
-        """
-        Searches the raw fasta/fastq sequence file to return an ORF's source nucleotide sequence.
-        :param orfile: Raw fasta/fastq sequence file: <self.file> #TODO: Go over this method and replace orfifle with <self.file> after testing before real deployment
-        :param resfile: Out file to store results in
-        :param orf_dict: Dictionary containing orf protein list from <ORF1/2/3>
-        :return: NONE
-        """
-        with open(orfile, 'r') as filein, open(resfile, 'w') as fileout:
+    def mntd_recall(self, resfile, orf_dict):
+
+        with self.openwith(self.file, 'r') as filein, open(resfile, 'w') as fileout:
             header=filein.readline()
-            fileout.write(header)
 
             counter=0
             orf_prot=1
@@ -687,6 +695,7 @@ class ReadORF:
 
                 while seqcount!= seqlen:
                     base=lines[seqcount]
+                    base=self.complement(base) #complement it because this is the 3'<5'
 
                     try: #try, except blocks to manage keyerror when orf protein dictionary calls out of table
                         #setting up checkpoints of orf/ntd seq co-ordinates from dictionary
@@ -705,8 +714,9 @@ class ReadORF:
                         append=0
 
                         #write to file:
-                        fileout.write('ORF Sequence '+str(orf_prot)+'\n')
+                        fileout.write('>ORF Sequence '+str(orf_prot)+'\n')
                         ntd_seqjoin=''.join(ntd_seq)
+                        ntd_seqjoin=ntd_seqjoin[::-1] #reversing it to match proper mORF protein seq too
                         fileout.write(ntd_seqjoin+'\n')
 
                         orf_prot+=1 #read for next orf protein
@@ -724,4 +734,5 @@ class ReadORF:
         del(orf_dict) #save mem space
 
         return
+
 
