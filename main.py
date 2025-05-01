@@ -1,4 +1,4 @@
-from orfread import create_app
+from App import create_app
 
 app=create_app()
 
