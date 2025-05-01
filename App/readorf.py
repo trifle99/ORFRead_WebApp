@@ -438,8 +438,6 @@ class ReadORF:
 
         return
 
-#####MAKE A MAIN FUNCTION WHICH RUNS ALL ORF FUNCTIONS?
-# IF __NAME__==__MAIN__: BLOCK TO RUN ALL THE CODE WHEN LOADING THE SCRIPT TYPE SHI
     def ORFSearch(self, ORFile, RESfile):
         '''
 
@@ -740,4 +738,52 @@ class ReadORF:
         del(orf_dict) #save mem space
 
         return
+
+class DBTest:
+#FOR TESTS
+    def __init__(self, file):
+        self.file=file
+
+
+    def add_entry(self):
+        from . import Session
+        from .database import raw_file
+
+        entry=raw_file(file_name='FILE_NAME_1', header='>HEADER_TEST_1')
+        session=Session()
+
+        session.add(entry)
+        session.commit()
+
+        return
+
+    def delete_entry(self):
+        from . import Session
+        from .database import raw_file
+
+        session=Session()
+#this deletes one
+        #query= session.query(raw_file).filter(raw_file.id>=1).first()
+        # session.delete(query)
+#this deletes ALL entries
+        session.query(raw_file).delete()
+        session.commit()
+
+        return
+
+
+    @staticmethod
+    def curr_dir():
+        import os
+        dir=os.getcwd()
+        print(dir)
+        abs_path=os.path.abspath(os.path.curdir)
+        print(abs_path)
+        return dir
+
+
+
+
+
+
 
