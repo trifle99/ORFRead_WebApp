@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<div>
+    NAVIGATE:
+    <a href="/">HOME</a>
+</div>
+<head>
+    <meta charset="UTF-8">
+    <title>TEST</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+<h1>Choose your database search:</h1><br>
+<form method="POST" action="">
+
+    <input type="radio" id="raw_files" name="which_db" value="raw_files">
+    <label for="raw_files">files</label><br>
+    <input type="radio" id="orf_db" name="which_db" value="orf_db">
+    <label for="orf_db">orf database</label><br>
+    <input type="submit" value="Submit">
+
+</form>
+<br>
+<br>
+    <table class="table">
+        <thead>
+            <tr class="table_header">
+                {%for head_name in headers%}
+                <th class="table_entry">{{head_name}}</th>
+                {%endfor%}
+            </tr>
+        </thead>
+        <tbody>
+        {%for entry in data%}
+        <tr class="table_row">
+            {%for head_name in headers%}
+            <td class="table_entry">{{entry[head_name]}}</td>
+            {%endfor%}
+        </tr>
+        {%endfor%}
+        </tbody>
+    </table>
+<br>
+<br>
+    <table class="table1">
+        <thead>
+            <tr class="table_header">
+                {%for header in orf_headers%}
+                <th class="table_entry">{{header}}</th>
+                {%endfor%}
+            </tr>
+        </thead>
+        <tbody>
+        {%for data in orf_data%}
+            <tr class="table_row">
+                    {%for header in orf_headers%}
+                    <td class="table_entry">{{data[header]}}</td>
+                    {%endfor%}
+
+            </tr>
+        {%endfor%}
+        </tbody>
+    </table>
+</body>
+</html>
