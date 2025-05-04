@@ -17,5 +17,5 @@ Once the web app is being run: <br>
 Your file should contain one sequence only (eg: >sequence 1 @ID etc, ACTGCACGATCG...). <br>
 
 ## TODO:
-+Speed up database commits. Can take a while to upload large files to database...
-+Add search feature to query and search for specific sequences.
++Speed up database commits. Can take a while to upload large files to database... <br>
++Add search feature to query and search for specific sequences. <br>
