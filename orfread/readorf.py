@@ -1,4 +1,5 @@
 #ReadORF
+import csv
 import gzip
 
 class ReadORF:
@@ -216,6 +217,7 @@ class ReadORF:
         return
 
     def ORF2(self, out):
+        #can deprecate these later into one ORF func...
         '''
 
         Translates a <self.file> fasta file or file with a nucleotide sequence into its amino acids with a frame shift of one
@@ -257,6 +259,7 @@ class ReadORF:
         return
 
     def ORF3(self, out):
+        #can deprecate these later into one ORF func...
         '''
 
         Translates a <self.file> fasta file or file with a nucleotide sequence into its amino acids with a frame shift of two
@@ -341,6 +344,7 @@ class ReadORF:
         return
 
     def mORF2(self, out):
+        #can deprecate these later into one mORF func...
         '''
 
         Complements a <self.file> fasta file or file's nucleotide sequence and then translates it into its amino acids with a frame shift of one
@@ -391,6 +395,7 @@ class ReadORF:
         return
 
     def mORF3(self, out):
+        #can deprecate these later into one mORF func...
         '''
 
         Complements a <self.file> fasta file or file's nucleotide sequence and then translates it into its amino acids with a frame shift of one
@@ -438,7 +443,7 @@ class ReadORF:
 
         return
 
-    def ORFSearch(self, ORFile, RESfile, frameshift):
+    def newORFSearch(self, ORFile, RESfile, frameshift):
         '''
 
         Analyses a file from <ORF1>, <ORF2> or <ORF3> (which have been translated in 5' > 3') and writes each ORF protein found into <RESfile>.
@@ -452,7 +457,15 @@ class ReadORF:
         #^I might remove this dictionary as I have no need for it, but it might be nice to have if it doesn't take too much memory? But this might be hard if im storing other frame shifts as well within dictionaries...
 
         '''
-        with self.openwith(ORFile, 'r') as filein, open(RESfile, self.writemode) as fileout:
+        import csv
+        with self.openwith(ORFile, 'r') as filein, open(RESfile, self.writemode, newline='', encoding='utf-8') as fileout:
+
+            #setting up our csv
+            csv_headers=['File_Header','Orf_Protein', 'Orf_Frame', 'Orf_Frameshift', 'Protein_Sequence', 'Protein_Length']
+            orf_frame=frameshift[0]
+            orf_frameshift=frameshift[1]
+            writer=csv.DictWriter(fileout, fieldnames=csv_headers)
+            writer.writeheader()
 
             header=filein.readline()
             #intialize some variables:
@@ -490,14 +503,16 @@ class ReadORF:
                         orf_id=[orfcoord-1, len(ORFjoin)] #saves the co-ordinates for this specific ORF protein X and the length of its orf protein sequence
                         #^ this kinda makes the dictionary redudant for storing ORF protein X information, so I might delete adding co-ords into the dict, but counting ['co-ords'] for total seq length is nice
 
-                        fileout.write('>'+orfname+'\n')#' @'+str(orf_id)+' >['+str(orf_id[0]*3)+', '+str(orf_id[1]*3)+'] \n') #write ORF number as mini header
-                        fileout.write(ORFjoin+'\n') #write our aa joined ORF sequence
+                        #writing to csv using dictwriter
+                        dict_orf_protein_entry=('>'+orfname)# #write ORF number as mini header
+                        dict_protein_sequence_entry=(ORFjoin) #write our aa joined ORF sequence
+                        writer.writerow({'File_Header':header,'Orf_Protein':dict_orf_protein_entry, 'Orf_Frame':orf_frame , 'Orf_Frameshift':orf_frameshift , 'Protein_Sequence':dict_protein_sequence_entry, 'Protein_Length':len(dict_protein_sequence_entry)})
 
             #print(ORF_coords.items()) #TESTS
 
         return (ORF_coords)
 
-    def mORFSearch(self, ORFile, RESfile, frameshift):
+    def mnewORFSearch(self, ORFile, RESfile, frameshift):
         '''
 
         Analyses a file from <ORFm1>, <ORFm2> or <ORFm3> (which have been complemented and translated in 5' > 3') and writes each ORF protein found into <RESfile>
@@ -524,9 +539,17 @@ class ReadORF:
 
     #* it is reversed because this func searches the 3'>5' orf region and when i translated the fastq ntd base into aa sequence for 3'>5', i didnt
     #reverse the whole file/sequence, i simply just translated the codon in its place. to reverse the whole file, i would have to store the big sequence in memory and then reverse it like [::-1], which might take long
+        import csv
 
-        with self.openwith(ORFile, 'r') as filein, open(RESfile, self.writemode) as fileout:
+        with self.openwith(ORFile, 'r') as filein, open(RESfile, self.writemode, newline='', encoding='utf-8') as fileout:
 
+            #setting up our csv
+            csv_headers=['File_Header','Orf_Protein', 'Orf_Frame', 'Orf_Frameshift', 'Protein_Sequence', 'Protein_Length']
+            writer=csv.DictWriter(fileout, fieldnames=csv_headers)
+            writer.writeheader()
+
+            orf_frame=frameshift[0]
+            orf_frameshift=frameshift[1]
             header=filein.readline()
             #intialize some variables:
             maybe_orf=0
@@ -561,8 +584,12 @@ class ReadORF:
                             mloc=ORFjoin.find('M')
                             ORFjoin=ORFjoin[mloc:]
                             orfname='ORF Protein '+str(ORFcount)+' @'+frameshift
-                            fileout.write('>'+orfname+'\n')
-                            fileout.write(ORFjoin+'\n')
+
+                            # writing to csv using dictwriter
+                            dict_orf_protein_entry = ('>' + orfname)  # #write ORF number as mini header
+                            dict_protein_sequence_entry = (ORFjoin)  # write our aa joined ORF sequence
+                            writer.writerow({'File_Header': header, 'Orf_Protein': dict_orf_protein_entry, 'Orf_Frame': orf_frame, 'Orf_Frameshift':orf_frameshift,
+                                             'Protein_Sequence': dict_protein_sequence_entry, 'Protein_Length':len(dict_protein_sequence_entry)})
 
                             ORF_coords[orfname]=[(ORF_coords['co-ords']-mloc+1), len(ORFjoin)] #-mloc because co-ords right now is at stop codon, mloc finds the index of m within the sequence,
                             #so i subtract mloc from co-ords to get start position of start codon M, +1 because i want to include the M start codon
@@ -584,8 +611,11 @@ class ReadORF:
                 mloc = ORFjoin.find('M')
                 ORFjoin = ORFjoin[mloc:]  # cut string from M index
                 orfname='ORF Protein '+str(ORFcount+1)+' @'+frameshift
-                fileout.write('>'+orfname+'\n')  # write ORF number as mini header
-                fileout.write(ORFjoin+'\n')  # write our aa joined ORF sequence
+                # writing to csv using dictwriter
+                dict_orf_protein_entry = ('>' + orfname)  # #write ORF number as mini header
+                dict_protein_sequence_entry = (ORFjoin)  # write our aa joined ORF sequence
+                writer.writerow({'File_Header': header, 'Orf_Protein': dict_orf_protein_entry, 'Orf_Frame': orf_frame, 'Orf_Frameshift':orf_frameshift,
+                                 'Protein_Sequence': dict_protein_sequence_entry, 'Protein_Length':len(dict_protein_sequence_entry)})
 
                 ORF_coords[orfname] = [(ORF_coords['co-ords']-mloc), len(ORFjoin)] #adding last orf protein to our orf_coords dict, #dont have to do +1 here because M codon is already included
 
@@ -615,7 +645,7 @@ class ReadORF:
 
         return (ORF_coords) #ORF_coords_sorted (for the real transposed co_ords) / ORF_coords (for my non transposed co_ords)
 
-    def ntd_recall(self, resfile, orf_dict, frameshift):
+    def newntd_recall(self, resfile, orf_dict, frameshift):
         """
         Searches the raw fasta/fastq sequence file to return an ORF's source nucleotide sequence.
         :param resfile: Out file to store results in
@@ -623,13 +653,21 @@ class ReadORF:
         :param frameshift: String identifier for forward or reverse strand? And which frame shift 1/2/3? eg: 'F1' >forward strand, frameshift 1 (5'>3' 1)
         :return: NONE
         """
-        with self.openwith(self.file, 'r') as filein, open(resfile, 'w') as fileout:
+        import csv
+
+        with self.openwith(self.file, 'r') as filein, open(resfile, 'w', newline='', encoding='utf-8') as fileout:
+
+            csv_header=['Nucleotide_Sequence', 'Nucleotide_Length', 'Nucleotide_Index']
+            writer=csv.DictWriter(fileout, fieldnames=csv_header)
+            writer.writeheader()
+
             header=filein.readline()
 
             counter=0
             orf_prot=1
             ntd_seq=[]
 
+            linecount=1
             append=0
 
             for lines in filein:
@@ -637,13 +675,19 @@ class ReadORF:
                 seqlen=len(lines)
                 seqcount=0
 
+
                 while seqcount!= seqlen:
                     base=lines[seqcount]
 
                     try: #try, except blocks to manage keyerror when orf protein dictionary calls out of table
                         #setting up checkpoints of orf/ntd seq co-ordinates from dictionary
                         prot=orf_dict['ORF Protein '+str(orf_prot) + ' @' +frameshift] ##################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-                        ntd_start=prot[0]*3
+                        ntd_start=(prot[0]*3)
+                        #ntd has to account for the frameshifts so i fix it here:
+                        if frameshift=='F2':
+                            ntd_start+=1
+                        elif frameshift=='F3':
+                            ntd_start+=2
                         ntd_end=ntd_start+(prot[1]*3)
                     except KeyError:
                         break
@@ -656,9 +700,9 @@ class ReadORF:
                         append=0
 
                         #write to file:
-                        fileout.write('>ORF Protein '+str(orf_prot)+' @'+frameshift+'\n')
+                        #fileout.write('>ORF Protein '+str(orf_prot)+' @'+frameshift+'\n')
                         ntd_seqjoin=''.join(ntd_seq)
-                        fileout.write(ntd_seqjoin+'\n')
+                        writer.writerow({'Nucleotide_Sequence':ntd_seqjoin, 'Nucleotide_Length':len(ntd_seqjoin),'Nucleotide_Index':ntd_start})#fileout.write(ntd_seqjoin+'\n')
 
                         orf_prot+=1 #read for next orf protein
                         ntd_seq=[]
@@ -676,7 +720,7 @@ class ReadORF:
 
         return
 
-    def mntd_recall(self, resfile, orf_dict, frameshift):
+    def mnewntd_recall(self, resfile, orf_dict, frameshift):
         """
         Searches the raw fasta/fastq sequence file to return an ORF's source nucleotide sequence.
         :param resfile: Out file to store results in
@@ -684,7 +728,14 @@ class ReadORF:
         :param frameshift: String identifier for forward or reverse strand? And which frame shift 1/2/3? eg: 'F1' >forward strand, frameshift 1 (5'>3' 1)
         :return: NONE
         """
-        with self.openwith(self.file, 'r') as filein, open(resfile, 'w') as fileout:
+        import csv
+
+        with self.openwith(self.file, 'r') as filein, open(resfile, 'w', newline='', encoding='utf-8') as fileout:
+
+            csv_header=['Nucleotide_Sequence', 'Nucleotide_Length', 'Nucleotide_Index']
+            writer=csv.DictWriter(fileout, fieldnames=csv_header)
+            writer.writeheader()
+
             header=filein.readline()
 
             counter=0
@@ -708,6 +759,11 @@ class ReadORF:
                         #for 3'<5' its different calcs:
                         prot=orf_dict['ORF Protein '+str(orf_prot)+' @'+frameshift]
                         ntd_start=(3*(coords-prot[0]))-(prot[1]*3)
+                        #ntd has to account for frameshifts, so i fix it here:
+                        if frameshift=='R2':
+                            ntd_start+=1
+                        elif frameshift=='R3':
+                            ntd_start+=2
                         ntd_end=ntd_start+(prot[1]*3)
                     except KeyError:
                         break
@@ -720,10 +776,10 @@ class ReadORF:
                         append=0
 
                         #write to file:
-                        fileout.write('>ORF Protein '+str(orf_prot)+' @'+frameshift+'\n')
+                        #fileout.write('>ORF Protein '+str(orf_prot)+' @'+frameshift+'\n')
                         ntd_seqjoin=''.join(ntd_seq)
                         ntd_seqjoin=ntd_seqjoin[::-1] #reversing it to match proper mORF protein seq too
-                        fileout.write(ntd_seqjoin+'\n')
+                        writer.writerow({'Nucleotide_Sequence':ntd_seqjoin, 'Nucleotide_Length':len(ntd_seqjoin), 'Nucleotide_Index':ntd_start})#fileout.write(ntd_seqjoin+'\n')
 
                         orf_prot+=1 #read for next orf protein
                         ntd_seq=[]
@@ -741,156 +797,34 @@ class ReadORF:
 
         return
 
-    #####DATABASE INTEGRATION METHODS##########
+    def combinecsv(self, csv_filein1, csv_filein2, csv_fileout):
+        #have to combine orf search and ntd_recall
+        import csv
 
-    def add_file(self, filename):
-        '''
-        Adds a file entry to the database
-        :param filename: Name of file
-        :return:  none
-        '''
-        from . import Session
-        from .database import raw_file
+        with (
+            open(csv_filein1, 'r', newline='') as filein1,
+            open(csv_filein2, 'r', newline='') as filein2,
+            open(csv_fileout, 'w', newline='') as fileout):
 
-        #saving an entry: file_name is saved as file name, header called to reveal first line (sequence id) of file
-        header=self.header()
-        entry=raw_file(file_name=str(filename), header=str(header))
-        #adding and commiting to db:
-        session=Session()
-        session.add(entry)
-        session.commit()
+            file1=csv.DictReader(filein1)
+            file2=csv.DictReader(filein2)
 
-        return
+            #sorting headers
+            file1_headers=file1.fieldnames
+            file2_headers=file2.fieldnames
+            combined_headers=file1_headers+file2_headers
 
-    def add_orf(self, ORFfile, orf_dict, header, orf_frameshift, orf_strand):
-        '''
-        Adds orf proteins to database
-        :param ORFfile: ORF proteins file from <ORFSearch> class.method
-        :param orf_dict: Return from <ORFsearch> class.method
-        :param header: raw_file.header from database schema for raw_file
-        :param orf_frameshift: 1/2/3
-        :param orf_strand: 'forward' for 5'>3' or 'reverse' for 3'<5'
-        :return: None
-        '''
-        from . import Session
-        from .database import ORF
+            writer=csv.DictWriter(fileout, fieldnames=combined_headers)
+            writer.writeheader()
 
-        session=Session()
-        orfname='x'
-        orfseq=[]
-
-        with open(ORFfile, 'r') as filein:
-
-            for line in filein:
-                line=line.rstrip()
-
-                if line[0]!='>': #checks first line
-                    orfseq.append(line)
-                else:
-                    if orfname!='x':
-
-                        entry=ORF(ORF_name=orfname, ORF_header=header, ORF_strand=orf_strand, ORF_frameshift=orf_frameshift, ORF_seq=''.join(orfseq), ORF_len=orf_len)
-                        session.add(entry)
-                        session.commit()
-                    orfseq=[]
-
-                    orfname=line[1:] #returns 'ORF PROTEIN 1' from '>ORF PROTEIN 1'
-                    orf_len=orf_dict[orfname][1] #can now call 'ORF PROTEIN 1' from dictionary which shows [23, 29], first index is position in orf protein.txt, second index is length of orf
-
-            #there should be one more orf protein after the loop ends, so adding this:
-            entry = ORF(ORF_name=orfname, ORF_header=header, ORF_strand=orf_strand, ORF_frameshift=orf_frameshift,
-                        ORF_seq=''.join(orfseq), ORF_len=orf_len)
-            session.add(entry)
-            session.commit()
-
-            del orf_dict #clear mem space
+            #read each row from each csv's
+            for f1,f2 in zip(file1, file2):
+                #combine the dicts
+                combined_dicts=f1.copy(); combined_dicts.update(f2)
+                writer.writerow(combined_dicts)
 
         return
 
-    def add_ntd(self, NTDfile, orf_dict, header):
-        '''
-        Adds NTD proteins to database
-        :param NTDfile: NTD sequence File from <ntd_recall> class.method
-        :param orf_dict: Return from <ORFsearch> class.method
-        :param header: raw_file.header from database schema for raw_file
-        :param orf_frameshift: 1/2/3
-        :param frameshift: String identifier for forward or reverse strand? And which frame shift 1/2/3? eg: 'F1' >forward strand, frameshift 1 (5'>3' 1)
-        :return: None
-        '''
-        from . import Session
-        from .database import ORF
-
-        session=Session()
-        orfname='x'
-        ntd_ind=0
-        ntd_len=0
-        orf_ind=0
-        ntdseq=[]
-
-        with open(NTDfile, 'r') as filein:
-
-            for line in filein:
-                line=line.rstrip()
-
-                if line[0]!='>': #checks first line
-                    ntdseq.append(line)
-                else:
-                    if orfname!='x':
-                        #Updating ORF.(ntd_tables)>by matching header and orfname to specific seq
-                        query = session.query(ORF).filter_by(ORF_header=header, ORF_name=orfname).update({'NTD_seq':''.join(ntdseq),
-                                                                                                               'NTD_index':ntd_ind,
-                                                                                                               'NTD_len':ntd_len,
-                                                                                                               'ORF_index':orf_ind})
-                        session.commit()
-
-                    ntdseq=[]
-
-                    orfname=line[1:] #returns 'ORF PROTEIN 1' from '>ORF PROTEIN 1'
-                    orf_new=orf_dict[orfname]#can now call 'ORF PROTEIN 1' from dictionary which shows [23, 29], first index is position in orf protein.txt, second index is length of orf
-
-                    if orfname[-2]=='R': #lookign at the strand info eg:'ORF PROTEIN 1 @R1', [-2] returns R or F depending on the orf prot
-                        coord=orf_dict['co-ords']
-                        orf_ind=orf_dict['co-ords']-orf_new[0]
-                        ntd_len=orf_new[1]*3
-                        ntd_ind=(3*(coord-orf_new[0]))-(ntd_len)
-                    else: #forward strand
-                        orf_ind=orf_new[0]
-                        ntd_len=orf_new[1]*3
-                        ntd_ind=orf_new[0]*3
-
-            #there should be one more orf protein after the loop ends, so adding this:
-            query = session.query(ORF).filter_by(ORF_header=header, ORF_name=orfname).update(
-                {'NTD_seq': ''.join(ntdseq),
-                 'NTD_index': ntd_ind,
-                 'NTD_len': ntd_len,
-                 'ORF_index': orf_ind})
-            session.commit()
-
-            del(orf_dict)
-
-        return
-
-    def update_raw_file(self, header):
-        '''
-        Updates raw_file.ORFs table
-        :param header: header of file you want to update
-        :return:
-        '''
-        from . import Session
-        from .database import raw_file, ORF
-
-        session=Session()
-
-        query=session.query(ORF).filter_by(ORF_header=header).all()
-        query=len(query)
-        update=session.query(raw_file).filter_by(header=header).update({'orf_proteins':query})
-        session.commit()
-
-        return
-
-    def del_orf_files(self):
-        
-        return
 
 class DBTest:
 #FOR TESTS
@@ -936,28 +870,174 @@ class DBTest:
         print(abs_path)
         return dir
 
+class DBcrud(ReadORF):
+    #Database C.R.U.D (create, read, update, delete) class
+
+    def add_file(self, file):
+        '''
+        Adds a file entry to the database
+        :param filename: Name of file
+        :return:  none
+        '''
+        from . import Session
+        from .database import raw_file
+
+        #saving an entry: file_name is saved as file name, header called to reveal first line (sequence id) of file
+        header=self.header()
+        entry=raw_file(file_name=str(file), header=str(header))
+        #adding and commiting to db:
+        session=Session()
+        session.add(entry)
+        session.commit()
+
+    def update_raw_file(self, header):
+        '''
+        Updates raw_file.ORFs table
+        :param header: header of file you want to update
+        :return:
+        '''
+        from . import Session
+        from .database import raw_file, ORF
+
+        session=Session()
+
+        #query=session.query(ORF).filter_by(ORF_header=header).all()
+        query=session.query(ORF).filter_by(ORF_header=header).count()
+        #query=len(query)
+        update=session.query(raw_file).filter_by(header=header).update({'orf_proteins':query})
+        session.commit()
+
+        return
+
+    def len_csv(self, file):
+        #figure length of csv file to determine <simple_add> or <bulk_add>
+        import csv
+        with open(file, 'r') as fileout:
+            reader=csv.DictReader(fileout)
+            line=0
+
+            for row in reader:
+                line+=1
+                if line>10:
+                    break
+
+        return line
+
+    def simple_add(self, file):
+        #simple add to database reading lines one by one
+        import csv
+        from sqlalchemy import insert
+        from . import Session
+        from .database import ORF
+
+        with open(file, 'r') as filein:
+            reader=csv.DictReader(filein)
+            headers=reader.fieldnames
+            session=Session()
+
+            while True:
+                try:
+                    row=next(reader)
+                    session.execute(
+                    insert(ORF),
+                    [
+                        {'ORF_header': row['File_Header'], 'ORF_name': row['Orf_Protein'],'ORF_strand': row['Orf_Frame'], 'ORF_frameshift':row['Orf_Frameshift'],
+                         'ORF_seq': row['Protein_Sequence'], 'NTD_seq': row['Nucleotide_Sequence'],
+                         'ORF_len': row['Protein_Length'], 'NTD_len': row['Nucleotide_Length'],
+                         'NTD_index': row['Nucleotide_Index']},])
+                except:
+                    break
+            session.commit()
+
+        return
+
+    def bulk_add(self, file):
+        #bulk adds entry of 'combined' csv's into database
+        from sqlalchemy import insert #bulk insert
+        import csv
+        from . import Session
+        from .database import ORF
+
+        with open(file, 'r') as filein:
+            reader=csv.DictReader(filein)
+            headers=reader.fieldnames
+
+            session=Session()
+
+            while True:
+                try:
+                    row1=next(reader)
+                    row2=next(reader)
+                    row3=next(reader)
+                    row4=next(reader)
+                    row5=next(reader)
+                    row6=next(reader)
+                    row7=next(reader)
+                    row8=next(reader)
+                    row9=next(reader)
+                    row10=next(reader)
+
+                    #bulk-insert into database
+                    session.execute(
+                        insert(ORF),
+                                [
+                                    {'ORF_header':row1['File_Header'], 'ORF_name':row1['Orf_Protein'],'ORF_strand': row1['Orf_Frame'], 'ORF_frameshift':row1['Orf_Frameshift'], 'ORF_seq':row1['Protein_Sequence'], 'NTD_seq':row1['Nucleotide_Sequence'], 'ORF_len':row1['Protein_Length'], 'NTD_len':row1['Nucleotide_Length'], 'NTD_index':row1['Nucleotide_Index']},
+                                    {'ORF_header':row2['File_Header'], 'ORF_name':row2['Orf_Protein'],'ORF_strand': row2['Orf_Frame'], 'ORF_frameshift':row2['Orf_Frameshift'], 'ORF_seq':row2['Protein_Sequence'], 'NTD_seq':row2['Nucleotide_Sequence'], 'ORF_len':row2['Protein_Length'], 'NTD_len':row2['Nucleotide_Length'], 'NTD_index':row2['Nucleotide_Index']},
+                                    {'ORF_header':row3['File_Header'], 'ORF_name':row3['Orf_Protein'],'ORF_strand': row3['Orf_Frame'], 'ORF_frameshift':row3['Orf_Frameshift'], 'ORF_seq':row3['Protein_Sequence'], 'NTD_seq':row3['Nucleotide_Sequence'], 'ORF_len':row3['Protein_Length'], 'NTD_len':row3['Nucleotide_Length'], 'NTD_index':row3['Nucleotide_Index']},
+                                    {'ORF_header': row4['File_Header'], 'ORF_name': row4['Orf_Protein'],'ORF_strand': row4['Orf_Frame'], 'ORF_frameshift':row4['Orf_Frameshift'], 'ORF_seq': row4['Protein_Sequence'],'NTD_seq': row4['Nucleotide_Sequence'], 'ORF_len':row4['Protein_Length'], 'NTD_len':row4['Nucleotide_Length'], 'NTD_index':row4['Nucleotide_Index']},
+                                    {'ORF_header': row5['File_Header'], 'ORF_name': row5['Orf_Protein'],'ORF_strand': row5['Orf_Frame'], 'ORF_frameshift':row5['Orf_Frameshift'],'ORF_seq': row5['Protein_Sequence'], 'NTD_seq': row5['Nucleotide_Sequence'], 'ORF_len':row5['Protein_Length'], 'NTD_len':row5['Nucleotide_Length'], 'NTD_index':row5['Nucleotide_Index']},
+                                    {'ORF_header': row6['File_Header'], 'ORF_name': row6['Orf_Protein'],'ORF_strand': row6['Orf_Frame'], 'ORF_frameshift':row6['Orf_Frameshift'], 'ORF_seq': row6['Protein_Sequence'],'NTD_seq': row6['Nucleotide_Sequence'], 'ORF_len':row6['Protein_Length'], 'NTD_len':row6['Nucleotide_Length'], 'NTD_index':row6['Nucleotide_Index']},
+                                    {'ORF_header': row7['File_Header'], 'ORF_name': row7['Orf_Protein'],'ORF_strand': row7['Orf_Frame'], 'ORF_frameshift':row7['Orf_Frameshift'],'ORF_seq': row7['Protein_Sequence'],'NTD_seq': row7['Nucleotide_Sequence'], 'ORF_len':row7['Protein_Length'], 'NTD_len':row7['Nucleotide_Length'], 'NTD_index':row7['Nucleotide_Index']},
+                                    {'ORF_header': row8['File_Header'], 'ORF_name': row8['Orf_Protein'],'ORF_strand': row8['Orf_Frame'], 'ORF_frameshift':row8['Orf_Frameshift'],'ORF_seq': row8['Protein_Sequence'],'NTD_seq': row8['Nucleotide_Sequence'], 'ORF_len':row8['Protein_Length'], 'NTD_len':row8['Nucleotide_Length'], 'NTD_index':row8['Nucleotide_Index']},
+                                    {'ORF_header': row9['File_Header'], 'ORF_name': row9['Orf_Protein'],'ORF_strand': row9['Orf_Frame'], 'ORF_frameshift':row9['Orf_Frameshift'],'ORF_seq': row9['Protein_Sequence'],'NTD_seq': row9['Nucleotide_Sequence'], 'ORF_len':row9['Protein_Length'], 'NTD_len':row9['Nucleotide_Length'], 'NTD_index':row9['Nucleotide_Index']},
+                                    {'ORF_header': row10['File_Header'], 'ORF_name': row10['Orf_Protein'],'ORF_strand': row10['Orf_Frame'], 'ORF_frameshift':row10['Orf_Frameshift'],'ORF_seq': row10['Protein_Sequence'],'NTD_seq': row10['Nucleotide_Sequence'], 'ORF_len':row10['Protein_Length'], 'NTD_len':row10['Nucleotide_Length'], 'NTD_index':row10['Nucleotide_Index']},
+                                ])
+
+                except StopIteration: #stops when iteration runs out
+                    #checks the last few rows that the while loop couldnt add because of (next) would cause stopiteration error before finishing inserting
+                    rows=[row1, row2, row3, row4, row5, row6, row7, row8, row9, row10]
+
+                    for row in rows:
+                        query=session.query(ORF).filter(ORF.ORF_header==row['File_Header'], ORF.ORF_name==row['Orf_Protein']).count()
+                        if query!=1:
+                            session.execute(insert(ORF),
+                            [{'ORF_header':row['File_Header'], 'ORF_name':row['Orf_Protein'],'ORF_strand':row['Orf_Frame'], 'ORF_frameshift':row['Orf_Frameshift'], 'ORF_seq':row['Protein_Sequence'], 'NTD_seq':row['Nucleotide_Sequence'], 'ORF_len':row['Protein_Length'], 'NTD_len':row['Nucleotide_Length'], 'NTD_index':row['Nucleotide_Index']}])
+                        session.commit()
+                    break
+
+        return
+
+    def query(self):
+        ...
+
+    def rm_file(self, file):
+        import os
+        os.remove(file)
+
+        return
+
+    def del_all(self):
+
+        from . import Session
+        from .database import raw_file, ORF
+
+        session = Session()
+        # this deletes one
+        # query= session.query(raw_file).filter(raw_file.id>=1).first()
+        # session.delete(query)
+        # this deletes ALL entries
+        session.query(raw_file).delete()
+        session.commit()
+
+        session.query(ORF).delete()
+        session.commit()
+
+        return
+
+
+
+
 if __name__=='__main__':
-    #TESTS
-    filemain=('C:\\Users\\gaura\\PycharmProjects\\orf\\database_entry.txt')
-    fileout1=('C:\\Users\\gaura\\PycharmProjects\\orf\\ORF1aa_seq.txt')
-    fileout2=('C:\\Users\\gaura\\PycharmProjects\\orf\\ORF1prots.txt')
-    fileout3=('C:\\Users\\gaura\\PycharmProjects\\orf\\ORF1ntds.txt')
-    test=ReadORF(filemain)
-    test.ORF1(fileout1)
-    res_dict=test.ORFSearch(fileout1, fileout2, 'F1')
-    print(res_dict)
-    print(res_dict['ORF Protein 1 @F1'])
-    test.ntd_recall(fileout3, res_dict, 'F1')
-    # header=test.header()
-    # print(header)
-    # #
-    filemain=('C:\\Users\\gaura\\PycharmProjects\\orf\\database_entry.txt')
-    fileout1=('C:\\Users\\gaura\\PycharmProjects\\orf\\mORF1aa_seq.txt')
-    fileout2=('C:\\Users\\gaura\\PycharmProjects\\orf\\mORF1prots.txt')
-    fileout3=('C:\\Users\\gaura\\PycharmProjects\\orf\\mORF1ntds.txt')
-    test=ReadORF(filemain)
-    test.mORF1(fileout1)
-    res_dict=test.mORFSearch(fileout1, fileout2, 'R1')
-    print(res_dict)
-    test.mntd_recall(fileout3, res_dict, 'R1')
+
+    print('hi')
 
