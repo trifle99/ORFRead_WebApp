@@ -2,6 +2,7 @@ from flask import Flask
 from .database import Base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import os
 
 # sqlite engine for lightweight database
 engine = create_engine('sqlite:///orfdatabase.db', echo=True)
@@ -13,8 +14,8 @@ def create_app():
     #app set up
     app=Flask(__name__)
     #do not read this
-    app.secret_key='super secret key'
-    app.config['SECRET KEY']='super duper secret key'
+    app.secret_key=os.environ['API_KEY']
+    app.config['SECRET KEY']=os.environ['API_KEY']
 
     #configuring our database
     app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///orfdatabase.db'
