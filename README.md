@@ -17,5 +17,5 @@ Once the web app is being run: <br>
 Your file should contain one sequence only (eg: >sequence 1 @ID etc, ACTGCACGATCG...). <br>
 
 ## TODO:
-+Speed up database commits. Can take a while to upload large files to database... <br>
++Speed up database commits. Can take a while to upload large files to database... :white_check_mark: before: took ~30mins to add 40,000 entries into ORF, now it takes ~10s to add 140,000 entries <br>
 +Add search feature to query and search for specific sequences. <br>
