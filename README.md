@@ -8,7 +8,9 @@ This is saved into a database which you can query from the web app! <br>
 ## How to use: 
 Once the web app is being run: <br>
 +Go to 'UPLOAD' page and submit your sequence file for upload <br>
-+Go to 'TEST' page to view your ORF protein sequences <br>
++Go to 'QUERY' page and select which ORF file you would like to view your ORF sequences for <br>
++If you want to search for certain features, you can apply filters by editing the QUERY forms <br>
++If you want to view the whole database, just leave the QUERY form blank <br>
 
 <!-- notes -->
 ## Note:
@@ -18,4 +20,5 @@ Your file should contain one sequence only (eg: >sequence 1 @ID etc, ACTGCACGATC
 
 ## TODO:
 +Speed up database commits. Can take a while to upload large files to database... :white_check_mark: before: took ~30mins to add 40,000 entries into ORF, now it takes ~10s to add 140,000 entries <br>
-+Add search feature to query and search for specific sequences. <br>
++Add search feature to query and search for specific sequences. <br> :white_check_mark: can now query database with certain filters by filling out query form <br>
+
