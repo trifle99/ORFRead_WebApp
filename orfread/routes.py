@@ -13,6 +13,8 @@ def home():
     return render_template('home.html')
 
 ##################################################
+##################################################
+##################################################
 
 #/upload route with GET method func to render template
 @routes.route('/upload', methods=['GET'])
@@ -25,7 +27,7 @@ def uploadpage():
 #/upload route with POST method to submit file data in body request
 @routes.route('/upload', methods=['POST'])
 def upload():
-    # func to process uploaded file
+    # func to process uploaded file>process the data with readorf.py logic to add them into our database
     uploaded_file=request.files['file']
     if uploaded_file.filename!='': #if uploaded file name is not empty:
 
@@ -154,6 +156,8 @@ def upload():
     return render_template('upload.html')
 
 ##################################################
+##################################################
+##################################################
 
 #search route
 @routes.route('/search', methods=['GET', 'POST'])
@@ -179,8 +183,8 @@ def search():
         else:
             return redirect(url_for('routes.home'))
 
-
-
+##################################################
+##################################################
 ##################################################
 
 @routes.route('/test')
@@ -194,10 +198,120 @@ def test():
     #return(str(res))
     headers=raw_file.__table__.columns.keys()
 
-    # #ORF Table data
-    # orf_res=session.query(ORF).all()
-    # orf_headers=ORF.__table__.columns.keys()
-    return render_template('test.html', headers=headers, data=res)#, orf_headers=orf_headers, orf_data=orf_res)
+    #ORF Table data
+    orf_res=session.query(ORF).all()
+    orf_headers=ORF.__table__.columns.keys()
+
+    #paginating our ORF table data
+
+    total=session.query(ORF).count()
+    page=request.args.get('page', 1, type=int)
+    per_page=50
+    offset=(page-1)*per_page
+    items=session.query(ORF).offset(offset).limit(per_page).all()
+
+    pages=(total+per_page-1)//per_page
+
+    return render_template('test.html', headers=headers, data=res, orf_headers=orf_headers, orf_data=items, page=page, pages=pages)
+
+##################################################
+##################################################
+##################################################
+
+@routes.route('/query', methods=['GET','POST'])
+def query():
+
+    if request.method=='GET':
+
+        from .database import raw_file, ORF
+        #this is to load the headers available from the database into our select form inputs
+        from . import Session
+        session = Session()
+
+        from sqlalchemy import select
+        # executing sql expression diretly using select and use scalars to return a scalar result object (normal result objects are returned as: [(1,),(2,)] but with scalar results they returend as [1,2]
+        # distinct returns unique values within that select query
+        unq_headers = session.scalars(select(ORF.ORF_header).distinct()).all()
+
+        return render_template('query.html', select_headers=unq_headers)
+
+    if request.method=='POST':
+
+        #save and send form data to redirected url:query_results
+        query=request.form.getlist('orf_query')
+        orf_headers=request.form.getlist('orf_table')
+
+        return redirect(url_for('routes.query_results', query_orf=query, query_headers=orf_headers))
+
+##################################################
+##################################################
+##################################################
+
+@routes.route('/query_results', methods=['GET'])
+def query_results():
+
+    if request.method=='GET':
+
+        query_orf = request.args.getlist('query_orf')
+        query_headers = request.args.getlist('query_headers')
+
+        from .database import ORF
+        from . import Session
+        from sqlalchemy import select
+        session_sql=Session()
+
+        from sqlalchemy import select
+        # executing sql expression diretly using select and use scalars to return a scalar result object (normal result objects are returned as: [(1,),(2,)] but with scalar results they returend as [1,2]
+        # distinct returns unique values within that select query
+        unq_headers = session_sql.scalars(select(ORF.ORF_header).distinct()).all()
+        select_query=int(query_orf[0])
+
+        #setting default values on form query if theyre empty
+        if query_orf[1]=="":
+            query_orf_len=0
+        else:
+            query_orf_len=query_orf[1]
+
+        if query_orf[2]=="":
+            query_ntd_len=0
+        else:
+            query_ntd_len=query_orf[2]
+
+        if query_orf[3]=="":
+            query_ntd_ind1=0
+        else:
+            query_ntd_ind1=query_orf[3]
+
+        if query_orf[4]=='':
+            #query for last ntd_index
+
+            query_ntd_ind_last=session_sql.query(ORF).order_by(-ORF.NTD_index).limit(1).first()
+            import re
+            #re to search for ntd_index number
+            pattern=r'NTD_index:(\d+)'
+            match=re.search(pattern, str(query_ntd_ind_last))
+            query_ntd_ind2=int(match.group(1))+1
+
+        else:
+            query_ntd_ind2=query_orf[4]
+
+        #add pagination to query data
+        page=request.args.get('page', 1, type=int) #getting value of page arg in url, default value if no page in url is 1 with type integer
+        per_page=50 #how many items we want to display per page
+        offset=(page-1)*per_page #starting point/index of each page
+        total=session_sql.query(ORF).filter(ORF.ORF_header==unq_headers[select_query], ORF.ORF_len>query_orf_len, ORF.NTD_len>query_ntd_len, ORF.NTD_index>query_ntd_ind1, ORF.NTD_index<query_ntd_ind2).count() #total count of items in our filtered data
+        pages=(total+per_page-1)//per_page #total number of pages
+
+        #adding query form filters to our query and adding offset+limit for paginations:
+        query_data=session_sql.query(ORF).filter(ORF.ORF_header==unq_headers[select_query], ORF.ORF_len>query_orf_len, ORF.NTD_len>query_ntd_len, ORF.NTD_index>query_ntd_ind1, ORF.NTD_index<query_ntd_ind2).offset(offset).limit(per_page).all() #our data
+
+
+    #i have to pass our form_data (query_headers, query_orf) in to html <a href...> during pagination so that it remembers the form_data filters
+    return render_template('query_results.html', query_headers=query_headers, query_orf=query_orf, query_data=query_data, page=page, pages=pages)
+
+##################################################
+##################################################
+##################################################
 
 if __name__=='__main__':
 
