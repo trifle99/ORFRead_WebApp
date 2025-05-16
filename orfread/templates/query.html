@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<div>
+    NAVIGATE:
+    <a href="/">HOME</a>
+    <a href="/upload">UPLOAD</a>
+</div>
+<head>
+    <meta charset="UTF-8">
+    <title>QUERY</title>
+    <link rel="stylesheet" href="/static/query_styles.css"/>
+</head>
+<body>
+    <h1> QUERY THE DATABASE HERE </h1>
+
+
+    <h1> Choose your orf queries:</h1>
+    <form method="POST" action="">
+        <label for="file_header_select">Select file header:</label><br>
+        <select id="file_header_select" name="orf_query">
+            {%for option in select_headers%}
+            <option value="{{loop.index0}}" >{{option}}</option> <!-- using loop.index for value because the direct value when using {{option}} adds \r\n from formatting so im using loop.index to set queryvalue directly to the index of the unq_headers list to get the direct header value, and using loop.index0 to account for pythonic way of counting lists so it returns the correct value when calling directly from the list-->
+            {%endfor%}
+        </select>
+        <br>
+        <label for="orf_len">Orf Length greater than:</label><br>
+        <input type="number" id="orf_len" name="orf_query"><br>
+        <label for="ntd_len">Nucleotide Length greater than:</label><br>
+        <input type="number" id="ntd_len" name="orf_query"><br>
+        <label for="ntd_ind">Nucleotide index location between:</label><br>
+        <input type="number" id="ntd_ind" name="orf_query"><br>
+        <label for="ntd_ind1"></label>
+        <input type="number" id="ntd_ind1" name="orf_query"><br>
+
+        <h1> Choose which tables you want to display:</h1><br>
+        <label for="orf_id">ORF_id:</label><br>
+        <input type="checkbox" id="orf_id" name="orf_table" value="ORF_id"><br>
+        <label for="orf_name">ORF_name:</label><br>
+        <input type="checkbox" id="orf_name" name="orf_table" value="ORF_name"><br>
+        <label for="orf_header">ORF_header:</label><br>
+        <input type="checkbox" id="orf_header" name="orf_table" value="ORF_header"><br>
+        <label for="orf_strand">ORF_strand:</label><br>
+        <input type="checkbox" id="orf_strand" name="orf_table" value="ORF_strand"><br>
+        <label for="orf_frameshift">ORF_frameshift:</label><br>
+        <input type="checkbox" id="orf_frameshift" name="orf_table" value="ORF_frameshift"><br>
+        <label for="orf_seq">ORF_seq:</label><br>
+        <input type="checkbox" id="orf_seq" name="orf_table" value="ORF_seq"><br>
+        <label for="orf_index">ORF_index:</label><br>
+        <input type="checkbox" id="orf_index" name="orf_table" value="ORF_index"><br>
+        <label for="orf_len_header">ORF_len:</label><br>
+        <input type="checkbox" id="orf_len_header" name="orf_table" value="ORF_len"><br>
+        <label for="ntd_seq">NTD_seq:</label><br>
+        <input type="checkbox" id="ntd_seq" name="orf_table" value="NTD_seq"><br>
+        <label for="ntd_index">NTD_index:</label><br>
+        <input type="checkbox" id="ntd_index" name="orf_table" value="NTD_index"><br>
+        <label for="ntd_len_header">NTD_len:</label><br>
+        <input type="checkbox" id="ntd_len_header" name="orf_table" value="NTD_len"><br>
+
+        <input type="submit" value="DISPLAY">
+    </form>
+    <br>
+    <br>
+
+</body>
+</html>
