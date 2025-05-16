@@ -161,7 +161,7 @@ class ReadORF:
         with self.openwith(self.file, 'r') as filein:
             header=filein.readline()
 
-        return str(header)
+        return (header)
 
     def complement(self, sequence):
         '''
@@ -900,8 +900,6 @@ class DBcrud(ReadORF):
         from .database import raw_file, ORF
 
         session=Session()
-
-        #query=session.query(ORF).filter_by(ORF_header=header).all()
         query=session.query(ORF).filter_by(ORF_header=header).count()
         #query=len(query)
         update=session.query(raw_file).filter_by(header=header).update({'orf_proteins':query})
@@ -1007,8 +1005,6 @@ class DBcrud(ReadORF):
 
         return
 
-    def query(self):
-        ...
 
     def rm_file(self, file):
         import os
@@ -1021,11 +1017,9 @@ class DBcrud(ReadORF):
         from . import Session
         from .database import raw_file, ORF
 
+        #deleting the whole database
         session = Session()
-        # this deletes one
-        # query= session.query(raw_file).filter(raw_file.id>=1).first()
-        # session.delete(query)
-        # this deletes ALL entries
+
         session.query(raw_file).delete()
         session.commit()
 
@@ -1033,8 +1027,6 @@ class DBcrud(ReadORF):
         session.commit()
 
         return
-
-
 
 
 if __name__=='__main__':

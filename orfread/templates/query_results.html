@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<div>
+    NAVIGATE:
+    <a href="/">HOME</a>
+    <a href="/upload">UPLOAD</a>
+</div>
+<head>
+    <meta charset="UTF-8">
+    <title>QUERY_RESULTS</title>
+    <link rel="stylesheet" href="/static/query_styles.css"/>
+</head>
+<h1>QUERY RESULTS</h1>
+
+<body>
+
+<table class="table">
+    <tr class="table_header">
+        {%for header in query_headers%}
+        <th class="table_entry">
+            {{header}}
+        </th>
+        {%endfor%}
+    </tr>
+    {%for data in query_data%}
+    <tr class="table_row">
+        {%for header in query_headers%}
+        <td class="table_entry">
+            {{data[header]}}
+        </td>
+        {%endfor%}
+    </tr>
+        {%endfor%}
+</table>
+
+    {%if page>1%} <!-- gives url for this page -->
+    <a href="{{url_for('routes.query_results', query_orf=query_orf, query_headers=query_headers, page=page-1)}}">Previous</a>
+    {%endif%}
+    <span> page {{page}}//{{pages}}</span>
+    {%if page< pages%} <!-- gives url for this page -->
+    <a href="{{url_for('routes.query_results', query_orf=query_orf, query_headers=query_headers, page=page+1)}}">Next</a>
+    {%endif%}
+</body>
+</html>

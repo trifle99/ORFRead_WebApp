@@ -13,7 +13,7 @@ Session = sessionmaker(bind=engine)  # create our session
 def create_app():
     #app set up
     app=Flask(__name__)
-    #do not read this
+
     app.secret_key=os.environ['API_KEY']
     app.config['SECRET KEY']=os.environ['API_KEY']
 

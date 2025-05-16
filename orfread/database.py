@@ -19,13 +19,12 @@ class raw_file(Base):
     orfs=relationship('ORF', back_populates='raw_file', #one to many relationship, as one file can have many ORF proteins
                       cascade='all, delete-orphan') #deletes all related ORF proteins, if the raw_file is deleted too
 
-    #represent method to print data for testing
+    #represent method to print data
     def __repr__(self):
         return(f'file_name:{self.file_name}, header:{self.header}, date:{self.date}')
 
 
 #ORF database table
-#this is processed inside by the app, so i can remove nullables
 class ORF(Base):
     __tablename__='ORFs'
     #ORF database schema
@@ -49,40 +48,9 @@ class ORF(Base):
 
     #represent method to print data for testing
     def __repr__(self):
-        return(f'ORF_id:{self.ORF_id}, ORF_header:{self.ORF_header}, ORF_strand:{self.ORF_strand}, ORF_frameshift:{self.ORF_frameshift}')
+        return(f'ORF_id:{self.ORF_id}, ORF_header:{self.ORF_header}, ORF_strand:{self.ORF_strand}, ORF_frameshift:{self.ORF_frameshift}, ORF_index:{self.ORF_index}, ORF_len:{self.ORF_len}, NTD_index:{self.NTD_index}')
 
-#TODO: EXPANDvvv
-#GENE ONTOLOGY, METABOLICP ATHWAYS, DBSNP, RSID, MUTATION?
-#BLAST HITS? #CONFIDENCE SCORES? #THRESHOLDS? ETC...
 
-####################################
-# TESTS TESTS TESTS
-####################################
 if __name__=='__main__':
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-    engine = create_engine('sqlite:///orfdatabase.db', echo=False)
 
-    ##################################
-
-
-    Base.metadata.create_all(engine)  # create our database tabels
-    Session = sessionmaker(bind=engine)  # create our session
-
-    session=Session()
-
-    # new_file=raw_file(id=90, file_name='MANUAL_INPUT_1', header='MANUAL_HEADER_INPUT_FIND')
-    # session.add(new_file)
-    # session.commit()
-    header='MANUAL_HEADER_INPUT_FIND'
-    # query=session.query(raw_file).filter_by(id=90).all()
-    # query=session.query(raw_file).filter_by(id=90).update({'file_name':'UPDATED_INPUT_1'})
-    # session.commit()
-    query=session.query(raw_file).filter_by(id=90, header=header).all()
-    #query1=session.query(raw_file).all()
-    print(query)
-    if query:
-        print('found')
-
-    query2=session.query(raw_file).filter_by(header=header).all()
-    print(len(query2))
+    print('hi')
